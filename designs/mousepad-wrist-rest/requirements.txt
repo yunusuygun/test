@@ -1,0 +1,2 @@
+build123d>=0.13
+trimesh>=4.0
