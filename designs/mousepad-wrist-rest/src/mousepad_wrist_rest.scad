@@ -1,84 +1,55 @@
-// Parametric integrated wrist-rest mousepad for 250×250 mm FDM trays.
-// Companion to the build123d source (text-to-cad style parametric workflow).
-// Units: mm. Print flat on the bed (Z up).
+// Gamer-edition wrist-rest mousepad — OpenSCAD companion (simplified).
+// Full-detail source: mousepad_wrist_rest.py (build123d).
+// 240×240 mm for 250×250 trays. Units: mm.
 
-/* [Fit] */
 width = 240;
 depth = 240;
-corner_r = 14;
-pad_thickness = 3.2;
+corner_chamfer = 20;
+pad_t = 3.8;
+wrist_peak = 20;
+wrist_front = 15;
+wrist_end = 112;
+$fn = 48;
 
-/* [Wrist rest] */
-wrist_front_h = 13;
-wrist_peak_h = 18.5;
-wrist_peak_from_front = 32;
-wrist_end = 100; // peak blend meets pad
-
-/* [Feet / underside] */
-foot_d = 12;
-foot_depth = 1.2;
-foot_inset = 18;
-underside_inset = 8;
-underside_depth = 1.4;
-rib_w = 3;
-
-$fn = 64;
-
-module footprint_2d() {
-  offset(r = corner_r)
-    square([width - 2 * corner_r, depth - 2 * corner_r], center = true);
+module armor_2d() {
+  offset(r = 5.5)
+    polygon([
+      [width/2 - corner_chamfer, -depth/2],
+      [width/2, -depth/2 + corner_chamfer],
+      [width/2, depth/2 - corner_chamfer],
+      [width/2 - corner_chamfer, depth/2],
+      [-width/2 + corner_chamfer, depth/2],
+      [-width/2, depth/2 - corner_chamfer],
+      [-width/2, -depth/2 + corner_chamfer],
+      [-width/2 + corner_chamfer, -depth/2]
+    ]);
 }
 
-function wrist_h(y_from_front) =
-  y_from_front <= 0 ? wrist_front_h :
-  y_from_front >= wrist_end ? pad_thickness :
-  y_from_front <= wrist_peak_from_front
-    ? let (t = y_from_front / wrist_peak_from_front,
-           w = 0.5 - 0.5 * cos(180 * t))
-        wrist_front_h + (wrist_peak_h - wrist_front_h) * w
-    : let (t = (y_from_front - wrist_peak_from_front) / (wrist_end - wrist_peak_from_front),
-           w = 0.5 - 0.5 * cos(180 * t))
-        wrist_peak_h + (pad_thickness - wrist_peak_h) * w;
+function h(yf) =
+  yf <= 0 ? wrist_front :
+  yf >= wrist_end ? pad_t :
+  yf <= 28
+    ? let(t = yf/28, w = 0.5 - 0.5*cos(180*t))
+      wrist_front + (wrist_peak - wrist_front)*w
+    : let(t = (yf-28)/(wrist_end-28), w = t*t*(3-2*t))
+      wrist_peak + (pad_t - wrist_peak)*w;
 
-module mousepad() {
-  front = -depth / 2;
-  samples = 32;
+module gamer_mousepad() {
+  front = -depth/2;
   difference() {
-    // blank
-    linear_extrude(height = wrist_peak_h)
-      footprint_2d();
-
-    // cut above height profile (YZ cutter extruded in X)
-    translate([0, 0, 0])
-      rotate([90, 0, 90])
-        linear_extrude(height = width + 20, center = true)
-          polygon(concat(
-            [[front - 2, wrist_peak_h + 5], [front - 2, wrist_front_h]],
-            [for (i = [0:samples])
-              let (y = front + (wrist_end / samples) * i,
-                   h = wrist_h(y - front))
-              [y, h]
-            ],
-            [[depth / 2, pad_thickness],
-             [depth / 2 + 2, pad_thickness],
-             [depth / 2 + 2, wrist_peak_h + 5]]
-          ));
-
-    // foot pockets
-    for (sx = [-1, 1], sy = [-1, 1])
-      translate([sx * (width / 2 - foot_inset), sy * (depth / 2 - foot_inset), -0.01])
-        cylinder(d = foot_d, h = foot_depth + 0.01);
-
-    // underside pocket
-    translate([0, 0, -0.01])
-      cube([width - 2 * underside_inset, depth - 2 * underside_inset, underside_depth + 0.01], center = true);
-  }
-
-  // restore cross ribs in underside pocket volume
-  translate([0, 0, underside_depth / 2]) {
-    cube([rib_w, depth - 2 * underside_inset, underside_depth], center = true);
-    cube([width - 2 * underside_inset, rib_w, underside_depth], center = true);
+    linear_extrude(wrist_peak) armor_2d();
+    rotate([90,0,90])
+      linear_extrude(width+20, center=true)
+        polygon(concat(
+          [[front-3, wrist_peak+5],[front-3, wrist_front]],
+          [for(i=[0:40]) let(y=front+wrist_end*i/40) [y, h(y-front)]],
+          [[depth/2, pad_t],[depth/2+3, pad_t],[depth/2+3, wrist_peak+5]]
+        ));
+    // cable notch
+    translate([0, depth/2, pad_t/2]) cube([24, 18, pad_t+4], center=true);
+    // RGB trench sample (rear)
+    translate([0, depth/2-6, pad_t-0.5]) cube([width-20, 1.8, 1.2], center=true);
   }
 }
 
-mousepad();
+gamer_mousepad();

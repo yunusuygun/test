@@ -1,8 +1,20 @@
 {
+  "edition": "gamer",
   "width_mm": 240.0,
   "depth_mm": 240.0,
-  "height_mm": 18.5,
-  "volume_cm3": 335.29,
+  "height_mm": 20.0,
+  "volume_cm3": 401.55,
+  "features": [
+    "armor_chamfer_corners",
+    "rgb_accent_trench",
+    "deck_rim",
+    "hex_grip",
+    "badge_chevron",
+    "side_tech_slots",
+    "cable_notch",
+    "honeycomb_underside",
+    "silicone_foot_pockets"
+  ],
   "stl": "/agent/repos/test/designs/mousepad-wrist-rest/exports/mousepad_wrist_rest.stl",
   "step": "/agent/repos/test/designs/mousepad-wrist-rest/exports/mousepad_wrist_rest.step"
 }
